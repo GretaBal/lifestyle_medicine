@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Gyvensenos medicinos įrankiai</title>
+<style>
+  :root {
+    --teal: #0d7377;
+    --teal-dark: #0a5c5f;
+    --teal-light: #e6f4f4;
+    --text: #2d3436;
+    --text-muted: #6b7a7a;
+    --bg: #f7fafa;
+    --card: #ffffff;
+    --border: #d9e6e6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 32px 20px;
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+    border-radius: 16px;
+    color: #fff;
+  }
+  header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+  header p { font-size: 0.95rem; opacity: 0.9; }
+  #status {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 24px;
+    font-size: 0.95rem;
+  }
+  .grid { display: grid; gap: 12px; }
+  a.card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  a.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(13, 115, 119, 0.12);
+    border-color: var(--teal);
+  }
+  .card .icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+  .card .info { flex: 1; min-width: 0; }
+  .card .name { font-weight: 600; font-size: 1rem; margin-bottom: 2px; }
+  .card .file { font-size: 0.8rem; color: var(--text-muted); word-break: break-all; }
+  .card .arrow { color: var(--teal); font-size: 1.1rem; flex-shrink: 0; }
+  footer {
+    text-align: center;
+    margin-top: 36px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🌿 Gyvensenos medicinos įrankiai</h1>
+    <p>Interaktyvios skaičiuoklės ir priemonės konsultacijoms</p>
+  </header>
+  <div id="status">Kraunamas įrankių sąrašas…</div>
+  <div class="grid" id="list"></div>
+  <footer>Visi skaičiavimai atliekami jūsų naršyklėje — duomenys niekur nesiunčiami.</footer>
+</div>
+
+<script>
+(function () {
+  // Automatiškai nustatoma iš adreso: vardas.github.io/repo/
+  var host = window.location.hostname;           // pvz., "greta.github.io"
+  var user = host.split(".")[0];
+  var pathParts = window.location.pathname.split("/").filter(Boolean);
+  var repo = pathParts.length ? pathParts[0] : user + ".github.io";
+
+  // Jei atidaryta ne per github.io (pvz., lokaliai), įrašykite reikšmes ranka:
+  // user = "jusu-vartotojo-vardas"; repo = "repozitorijos-pavadinimas";
+
+  var statusEl = document.getElementById("status");
+  var listEl = document.getElementById("list");
+
+  // Pavadinimų gražinimas: "smart-tikslai.html" -> "Smart tikslai"
+  function prettyName(filename) {
+    var name = filename.replace(/\.html?$/i, "").replace(/[-_]+/g, " ");
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  fetch("https://api.github.com/repos/" + user + "/" + repo + "/contents/")
+    .then(function (r) {
+      if (!r.ok) throw new Error("API klaida: " + r.status);
+      return r.json();
+    })
+    .then(function (files) {
+      var htmlFiles = files.filter(function (f) {
+        return f.type === "file" &&
+               /\.html?$/i.test(f.name) &&
+               f.name.toLowerCase() !== "index.html";
+      });
+
+      if (!htmlFiles.length) {
+        statusEl.textContent = "Repozitorijoje kol kas nėra kitų HTML failų.";
+        return;
+      }
+
+      statusEl.style.display = "none";
+      htmlFiles.sort(function (a, b) { return a.name.localeCompare(b.name, "lt"); });
+
+      htmlFiles.forEach(function (f) {
+        var a = document.createElement("a");
+        a.className = "card";
+        a.href = f.name;
+        a.innerHTML =
+          '<div class="icon">🧰</div>' +
+          '<div class="info">' +
+            '<div class="name">' + prettyName(f.name) + '</div>' +
+            '<div class="file">' + f.name + '</div>' +
+          '</div>' +
+          '<div class="arrow">→</div>';
+        listEl.appendChild(a);
+      });
+    })
+    .catch(function (err) {
+      statusEl.textContent = "Nepavyko įkelti sąrašo (" + err.message + "). Atnaujinkite puslapį arba patikrinkite, ar repozitorija vieša.";
+    });
+})();
+</script>
+</body>
+</html>
