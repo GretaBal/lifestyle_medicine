@@ -13,43 +13,46 @@
   *{box-sizing:border-box}
   body{margin:0; background:var(--bg); color:var(--ink);
     font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.5; padding:24px 16px}
-  .wrap{max-width:920px; margin:0 auto}
+  .wrap{max-width:1100px; margin:0 auto}
   .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-deep); font-weight:700}
   h1{font-size:25px; margin:6px 0 2px; letter-spacing:-.01em}
   .sub{color:var(--muted); font-size:14px; margin:0 0 18px}
-  .layout{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
+  .layout{display:grid; grid-template-columns:330px 1fr; gap:20px; align-items:start}
   .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 1px 2px rgba(20,50,59,.04)}
   h2{font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-deep); margin:0 0 14px; font-weight:700}
 
-  .domain{margin-bottom:20px}
+  .domain{margin-bottom:15px}
   .domain:last-child{margin-bottom:4px}
-  .domain-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px}
-  .domain-name{font-weight:700; font-size:14.5px}
-  .domain-val{font-weight:800; font-size:16px; color:var(--accent-deep); min-width:28px; text-align:right}
-  .domain-q{font-size:12.5px; color:var(--muted); margin:0 0 8px; font-style:italic}
+  .domain-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px}
+  .domain-name{font-weight:700; font-size:13.5px}
+  .domain-val{font-weight:800; font-size:15px; color:var(--accent-deep); min-width:28px; text-align:right}
+  .domain-q{font-size:11.5px; color:var(--muted); margin:0 0 6px; font-style:italic}
   input[type=range]{width:100%; height:6px; border-radius:999px; appearance:none; background:linear-gradient(90deg,var(--low),var(--mid) 50%,var(--high)); outline:none}
-  input[type=range]::-webkit-slider-thumb{appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--accent-deep); cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.25)}
-  input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--accent-deep); cursor:pointer}
-  .scale{display:flex; justify-content:space-between; font-size:10.5px; color:#9AA7AD; margin-top:2px}
+  input[type=range]::-webkit-slider-thumb{appearance:none; width:22px; height:22px; border-radius:50%; background:#fff; border:3px solid var(--accent-deep); cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  input[type=range]::-moz-range-thumb{width:22px; height:22px; border-radius:50%; background:#fff; border:3px solid var(--accent-deep); cursor:pointer}
+  .scale{display:flex; justify-content:space-between; font-size:10px; color:#9AA7AD; margin-top:2px}
 
-  .chartCard{position:sticky; top:16px; text-align:center}
-  svg{width:100%; height:auto; max-width:420px}
-  .vlabel{font-size:11px; fill:var(--muted)}
-  .dlabel{font-size:12.5px; fill:var(--ink); font-weight:700}
+  .chartCard{position:sticky; top:16px; text-align:center; padding:14px 10px 18px}
+  svg{width:100%; height:auto; display:block}
+  .rlabel{font-size:10px; fill:#9AA7AD}
+  .dlabel{font-size:16px; fill:var(--ink); font-weight:700}
 
-  .priority{margin-top:14px; background:var(--soft); border:1px dashed var(--accent); border-radius:12px; padding:13px 15px; font-size:14px; text-align:left}
-  .priority .tag{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; display:block; margin-bottom:4px}
-  .avg{display:flex; gap:10px; margin-top:12px}
-  .avgchip{flex:1; background:var(--soft); border-radius:10px; padding:8px 10px; text-align:center}
-  .avgchip b{display:block; font-size:18px; color:var(--accent-deep)}
-  .avgchip span{font-size:11px; color:var(--muted)}
+  .priority{margin-top:14px; background:var(--soft); border:1px dashed var(--accent); border-radius:12px; padding:11px 13px; font-size:13px; text-align:left}
+  .priority .tag{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; display:block; margin-bottom:3px}
+  .avg{display:flex; gap:8px; margin-top:16px}
+  .avgchip{flex:1; background:var(--soft); border-radius:10px; padding:7px 8px; text-align:center}
+  .avgchip b{display:block; font-size:17px; color:var(--accent-deep)}
+  .avgchip span{font-size:10.5px; color:var(--muted)}
 
-  .resetBtn{margin-top:14px; font:inherit; font-weight:600; font-size:13px; padding:9px 14px; border:1px solid var(--line); color:var(--muted); background:#fff; border-radius:9px; cursor:pointer}
+  .resetBtn{margin-top:12px; width:100%; font:inherit; font-weight:600; font-size:13px; padding:9px 14px; border:1px solid var(--line); color:var(--muted); background:#fff; border-radius:9px; cursor:pointer}
   .resetBtn:hover{border-color:var(--accent); color:var(--accent-deep)}
 
   .howto{font-size:12.5px; color:var(--muted); margin-top:16px; padding-top:14px; border-top:1px solid var(--line)}
   .howto b{color:var(--ink)}
-  @media(max-width:760px){ .layout{grid-template-columns:1fr} .chartCard{position:static} }
+  @media(max-width:840px){
+    .layout{grid-template-columns:1fr}
+    .chartCard{position:static; order:-1}
+  }
 </style>
 </head>
 <body>
@@ -62,14 +65,13 @@
     <div class="card">
       <h2>Vertinimas</h2>
       <div id="domains"></div>
-    </div>
-
-    <div class="card chartCard">
-      <h2 style="text-align:left">Gyvensenos ratas</h2>
-      <svg id="wheel" viewBox="-75 -5 550 440"></svg>
       <div class="avg" id="avgBox"></div>
       <div class="priority" id="priorityBox"></div>
       <button class="resetBtn" id="resetBtn">Atstatyti (5/10 visur)</button>
+    </div>
+
+    <div class="card chartCard">
+      <svg id="wheel" viewBox="-75 -5 550 440" role="img" aria-label="Gyvensenos rato diagrama"></svg>
     </div>
   </div>
 
@@ -145,26 +147,43 @@
       g.appendChild(line);
     });
 
+    // ring value mark (5) on the top axis
+    [5].forEach(level=>{
+      const txt = document.createElementNS(NS,"text");
+      txt.setAttribute("x", CX+7);
+      txt.setAttribute("y", CY - (level/10)*RMAX + 4);
+      txt.setAttribute("class","rlabel");
+      txt.textContent = level;
+      g.appendChild(txt);
+    });
+
     // data polygon
     const dataPts = domains.map((d,i)=> pt(values[d.key], i));
     const dataPoly = document.createElementNS(NS,"polygon");
     dataPoly.setAttribute("points", polyStr(dataPts));
-    dataPoly.setAttribute("fill","rgba(14,138,143,0.22)");
+    dataPoly.setAttribute("fill","rgba(14,138,143,0.20)");
     dataPoly.setAttribute("stroke","#0E8A8F");
-    dataPoly.setAttribute("stroke-width","2.5");
+    dataPoly.setAttribute("stroke-width","3");
     dataPoly.setAttribute("stroke-linejoin","round");
     g.appendChild(dataPoly);
 
-    // data dots + value labels
+    // data dots with the score inside
     domains.forEach((d,i)=>{
       const [x,y] = pt(values[d.key], i);
-      const dot = document.createElementNS(NS,"circle");
-      dot.setAttribute("cx",x); dot.setAttribute("cy",y); dot.setAttribute("r","5");
       const v = values[d.key];
       const color = v<=3 ? "#C1473F" : v<=6 ? "#D9A441" : "#2E8B57";
+      const dot = document.createElementNS(NS,"circle");
+      dot.setAttribute("cx",x); dot.setAttribute("cy",y); dot.setAttribute("r","13");
       dot.setAttribute("fill", color);
-      dot.setAttribute("stroke","#fff"); dot.setAttribute("stroke-width","1.5");
+      dot.setAttribute("stroke","#fff"); dot.setAttribute("stroke-width","2.5");
       g.appendChild(dot);
+      const num = document.createElementNS(NS,"text");
+      num.setAttribute("x",x); num.setAttribute("y",y);
+      num.setAttribute("text-anchor","middle"); num.setAttribute("dy","0.36em");
+      num.setAttribute("fill","#fff");
+      num.setAttribute("font-size","12.5"); num.setAttribute("font-weight","800");
+      num.textContent = v;
+      g.appendChild(num);
     });
 
     // domain labels (outer)
@@ -184,7 +203,7 @@
         const mid = Math.ceil(words.length/2);
         const l1=words.slice(0,mid).join(" "), l2=words.slice(mid).join(" ");
         const t1=document.createElementNS(NS,"tspan"); t1.setAttribute("x",lx); t1.setAttribute("dy","0"); t1.textContent=l1;
-        const t2=document.createElementNS(NS,"tspan"); t2.setAttribute("x",lx); t2.setAttribute("dy","14"); t2.textContent=l2;
+        const t2=document.createElementNS(NS,"tspan"); t2.setAttribute("x",lx); t2.setAttribute("dy","17"); t2.textContent=l2;
         label.appendChild(t1); label.appendChild(t2);
       } else {
         label.textContent = d.name;
