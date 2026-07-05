@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPAQ-SF skaičiuoklė | IPAQ-SF Calculator</title>
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root{
+    --bg:#f4f7f9; --card:#ffffff; --ink:#1e2a32; --ink-soft:#5b6b76;
+    --line:#dde5ea; --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#e6f2f1;
+    --ok:#15803d;   --ok-bg:#e9f7ee;
+    --warn:#b45309; --warn-bg:#fdf3e3;
+    --risk:#b91c1c; --risk-bg:#fdeaea;
+    --info:#1d4ed8; --info-bg:#e9effd;
+    --radius:14px; --shadow:0 2px 10px rgba(30,42,50,.07);
+    font-size:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px; margin:0 auto; padding:24px 16px 48px}
+
+  header{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:8px}
+  h1{font-size:1.4rem; margin:8px 0 4px; letter-spacing:-.01em}
+  .subtitle{color:var(--ink-soft); margin:0 0 20px; font-size:.95rem; max-width:560px}
+  .lang-toggle{display:flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--card); box-shadow:var(--shadow); flex:0 0 auto; margin-top:10px}
+  .lang-toggle button{border:0; background:transparent; padding:7px 16px; font:inherit; font-weight:600; color:var(--ink-soft); cursor:pointer}
+  .lang-toggle button.active{background:var(--accent); color:var(--accent-ink)}
+  .lang-toggle button:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px; margin-bottom:16px}
+
+  /* ---- activity blocks ---- */
+  .act-head{display:flex; align-items:center; gap:10px; margin-bottom:2px}
+  .act-dot{width:12px; height:12px; border-radius:50%; flex:0 0 auto}
+  .dot-v{background:#b91c1c} .dot-m{background:#b45309} .dot-w{background:#0f766e}
+  .act-title{font-weight:700; font-size:1rem}
+  .act-q{color:var(--ink-soft); font-size:.88rem; margin:2px 0 14px}
+
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  @media (max-width:560px){ .row2{grid-template-columns:1fr} }
+  .field-label{font-weight:600; font-size:.85rem; margin-bottom:7px; display:block}
+
+  /* day pills 0–7 */
+  .days{display:flex; gap:5px; flex-wrap:wrap}
+  .days button{flex:1 0 auto; min-width:34px; padding:8px 0; border:1.5px solid var(--line); background:#fff;
+    border-radius:9px; font:inherit; font-weight:600; font-size:.92rem; color:var(--ink-soft); cursor:pointer}
+  .days button:hover{border-color:var(--accent)}
+  .days button.sel{background:var(--accent); border-color:var(--accent); color:#fff}
+  .days button:focus-visible{outline:2px solid var(--ink); outline-offset:1px}
+
+  /* minutes: input + quick chips */
+  .min-wrap{display:flex; gap:8px; align-items:center}
+  .min-wrap input{width:86px; padding:9px 10px; font:inherit; font-size:1rem; text-align:center;
+    border:1.5px solid var(--line); border-radius:9px; color:var(--ink)}
+  .min-wrap input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .min-wrap input.invalid{border-color:var(--risk)}
+  .min-unit{font-size:.85rem; color:var(--ink-soft); flex:0 0 auto}
+  .chips{display:flex; gap:5px; margin-top:8px; flex-wrap:wrap}
+  .chips button{border:1px solid var(--line); background:#fff; border-radius:999px; padding:4px 12px;
+    font:inherit; font-size:.82rem; font-weight:600; color:var(--ink-soft); cursor:pointer}
+  .chips button:hover{border-color:var(--accent); color:var(--accent)}
+  .chips button.sel{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+  .field-error{color:var(--risk); font-size:.8rem; margin-top:5px; min-height:1em}
+  .trunc-note{display:none; margin-top:10px; font-size:.82rem; color:var(--warn); background:var(--warn-bg); border-radius:9px; padding:8px 12px}
+  .trunc-note.show{display:block}
+
+  /* ---- sitting ---- */
+  .sit-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+
+  /* ---- result ---- */
+  .result-top{display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap}
+  .result-value{font-size:2.3rem; font-weight:800; letter-spacing:-.02em; line-height:1.1}
+  .result-unit{font-size:.95rem; font-weight:600; color:var(--ink-soft)}
+  .badge{display:inline-block; padding:6px 16px; border-radius:999px; font-weight:700; font-size:1rem}
+  .badge.ok{color:var(--ok); background:var(--ok-bg)}
+  .badge.warn{color:var(--warn); background:var(--warn-bg)}
+  .badge.risk{color:var(--risk); background:var(--risk-bg)}
+  .interpretation{margin:12px 0 0; font-size:.93rem}
+  .crit{font-size:.85rem; color:var(--ink-soft); margin:6px 0 0}
+
+  /* stacked contribution bar */
+  .bar{display:flex; height:14px; border-radius:999px; overflow:hidden; background:var(--line); margin:16px 0 6px}
+  .bar div{height:100%}
+  .bar .b-v{background:#b91c1c} .bar .b-m{background:#b45309} .bar .b-w{background:#0f766e}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:.82rem; color:var(--ink-soft)}
+  .legend span{display:inline-flex; align-items:center; gap:6px}
+  .legend i{width:10px; height:10px; border-radius:3px; display:inline-block}
+
+  .who{margin-top:14px; font-size:.87rem; border-radius:10px; padding:10px 14px}
+  .who.ok{background:var(--ok-bg); color:var(--ok)}
+  .who.warn{background:var(--warn-bg); color:var(--warn)}
+  .sitnote{margin-top:8px; font-size:.85rem; color:var(--ink-soft)}
+
+  table.bands{width:100%; border-collapse:collapse; margin-top:16px; font-size:.85rem}
+  table.bands td{padding:7px 8px; border-top:1px solid var(--line); vertical-align:top}
+  table.bands td:first-child{width:96px; font-weight:700; white-space:nowrap}
+  table.bands tr.current td{background:var(--accent-soft)}
+
+  .actions{display:flex; gap:10px; margin:2px 0 16px; flex-wrap:wrap}
+  .btn{border:0; border-radius:10px; padding:11px 20px; font:inherit; font-weight:700; cursor:pointer}
+  .btn-primary{background:var(--accent); color:var(--accent-ink)}
+  .btn-primary:hover{filter:brightness(1.06)}
+  .btn-ghost{background:transparent; color:var(--ink-soft); border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent)}
+  .btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+
+  footer{color:var(--ink-soft); font-size:.78rem; margin-top:8px}
+  footer p{margin:4px 0}
+
+  /* ============ PRINT ============ */
+  .print-meta{display:none; font-size:.85rem; color:var(--ink-soft); margin-bottom:12px}
+  @media print{
+    @page{margin:0}
+    body{background:#fff}
+    .wrap{padding:16mm 15mm}
+    .lang-toggle,.actions,.chips{display:none!important}
+    .card{box-shadow:none; border-color:#bbb; break-inside:avoid}
+    .print-meta{display:block}
+    .days button{color:#999}
+    .days button.sel{background:var(--accent); color:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+    .badge,.bar div,.who,.act-dot{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 data-i18n="title"></h1>
+      <p class="subtitle" data-i18n="subtitle"></p>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Kalba / Language">
+      <button id="btn-lt" onclick="setLang('lt')">LT</button>
+      <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <p class="print-meta"><span data-i18n="printPatient"></span>: ______________________ &nbsp;&nbsp; <span data-i18n="printDate"></span>: ____________</p>
+
+  <!-- Vigorous -->
+  <div class="card">
+    <div class="act-head"><span class="act-dot dot-v"></span><span class="act-title" data-i18n="vTitle"></span></div>
+    <p class="act-q" data-i18n="vQ"></p>
+    <div class="row2">
+      <div>
+        <span class="field-label" data-i18n="daysLabel"></span>
+        <div class="days" id="days-v" role="group"></div>
+      </div>
+      <div>
+        <span class="field-label" data-i18n="minLabel"></span>
+        <div class="min-wrap">
+          <input type="text" id="min-v" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="min-unit" data-i18n="minUnit"></span>
+        </div>
+        <div class="chips" data-for="min-v"></div>
+        <div class="field-error" id="err-v"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Moderate -->
+  <div class="card">
+    <div class="act-head"><span class="act-dot dot-m"></span><span class="act-title" data-i18n="mTitle"></span></div>
+    <p class="act-q" data-i18n="mQ"></p>
+    <div class="row2">
+      <div>
+        <span class="field-label" data-i18n="daysLabel"></span>
+        <div class="days" id="days-m" role="group"></div>
+      </div>
+      <div>
+        <span class="field-label" data-i18n="minLabel"></span>
+        <div class="min-wrap">
+          <input type="text" id="min-m" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="min-unit" data-i18n="minUnit"></span>
+        </div>
+        <div class="chips" data-for="min-m"></div>
+        <div class="field-error" id="err-m"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Walking -->
+  <div class="card">
+    <div class="act-head"><span class="act-dot dot-w"></span><span class="act-title" data-i18n="wTitle"></span></div>
+    <p class="act-q" data-i18n="wQ"></p>
+    <div class="row2">
+      <div>
+        <span class="field-label" data-i18n="daysLabel"></span>
+        <div class="days" id="days-w" role="group"></div>
+      </div>
+      <div>
+        <span class="field-label" data-i18n="minLabel"></span>
+        <div class="min-wrap">
+          <input type="text" id="min-w" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="min-unit" data-i18n="minUnit"></span>
+        </div>
+        <div class="chips" data-for="min-w"></div>
+        <div class="field-error" id="err-w"></div>
+      </div>
+    </div>
+    <div class="trunc-note" id="truncNote"></div>
+  </div>
+
+  <!-- Sitting (informational) -->
+  <div class="card">
+    <div class="act-head"><span class="act-title" data-i18n="sitTitle"></span></div>
+    <p class="act-q" data-i18n="sitQ"></p>
+    <div class="sit-row">
+      <div class="min-wrap">
+        <input type="text" id="sit" inputmode="decimal" autocomplete="off" placeholder="—" style="width:86px">
+        <span class="min-unit" data-i18n="sitUnit"></span>
+      </div>
+      <div class="field-error" id="err-sit" style="margin:0"></div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="card" id="result">
+    <div class="result-top">
+      <div>
+        <div style="font-size:.85rem; color:var(--ink-soft); font-weight:600" data-i18n="totalLabel"></div>
+        <div class="result-value"><span id="total">0</span> <span class="result-unit">MET-min./sav.</span></div>
+      </div>
+      <span class="badge" id="badge"></span>
+    </div>
+
+    <div class="bar" id="bar" aria-hidden="true"></div>
+    <div class="legend" id="legend"></div>
+
+    <p class="interpretation" id="interpretation"></p>
+    <p class="crit" id="crit"></p>
+
+    <div class="who" id="who"></div>
+    <p class="sitnote" id="sitnote"></p>
+
+    <table class="bands" id="bands"></table>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="window.print()" data-i18n="printBtn"></button>
+    <button class="btn btn-ghost" onclick="resetForm()" data-i18n="clearBtn"></button>
+  </div>
+
+  <footer>
+    <p data-i18n="source"></p>
+    <p data-i18n="disclaimer"></p>
+  </footer>
+</div>
+
+<script>
+/* ============ i18n ============ */
+const i18n = {
+  lt: {
+    title:"IPAQ-SF fizinio aktyvumo skaičiuoklė",
+    subtitle:"Trumpasis tarptautinis fizinio aktyvumo klausimynas. Klauskite apie paskutines 7 dienas — apie veiklą, trukusią bent 10 min. be pertraukos. Rezultatas skaičiuojamas automatiškai.",
+    printPatient:"Pacientas", printDate:"Data",
+    vTitle:"Labai intensyvi veikla",
+    vQ:"Per paskutines 7 dienas — sunkus fizinis darbas, bėgimas, aerobika, greitas važiavimas dviračiu (kvėpavimas gerokai padažnėja).",
+    mTitle:"Vidutinio intensyvumo veikla",
+    mQ:"Per paskutines 7 dienas — nešti nesunkius daiktus, ramus važiavimas dviračiu, dvejetų tenisas (kvėpavimas šiek tiek padažnėja). Neįskaičiuokite vaikščiojimo.",
+    wTitle:"Vaikščiojimas",
+    wQ:"Per paskutines 7 dienas — vaikščiojimas darbe, namuose, keliaujant iš vienos vietos į kitą, pasivaikščiojimai laisvalaikiu (bent 10 min. be pertraukos).",
+    sitTitle:"Sėdėjimas (neįtraukiama į balą)",
+    sitQ:"Kiek valandų per parą paprastai praleidžiate sėdėdami darbo dieną? (darbe, namuose, prie ekrano, transporte)",
+    sitUnit:"val. per dieną",
+    daysLabel:"Dienų per savaitę",
+    minLabel:"Vidutiniškai per dieną",
+    minUnit:"min.",
+    errMin:"Įveskite minutes skaičiumi (0–960)",
+    errSit:"Įveskite valandas (0–24)",
+    truncShort:"Trumpesnė nei 10 min. veikla pagal IPAQ protokolą į balą neįskaičiuojama:",
+    truncLong:"Ilgesnė nei 180 min./d. veikla pagal IPAQ protokolą apribojama iki 180 min.:",
+    truncNames:{v:"labai intensyvi", m:"vidutinė", w:"vaikščiojimas"},
+    totalLabel:"Bendras fizinis aktyvumas",
+    cat:{high:"Aukštas", moderate:"Vidutinis", low:"Žemas"},
+    interp:{
+      high:"Fizinio aktyvumo lygis aukštas. Rekomenduojama palaikyti esamus įpročius ir aptarti veiklos įvairovę bei raumenis stiprinančius pratimus.",
+      moderate:"Fizinio aktyvumo lygis vidutinis. Rekomenduojama aptarti galimybes palaipsniui didinti aktyvumą — dažnį, trukmę arba intensyvumą.",
+      low:"Fizinio aktyvumo lygis žemas. Rekomenduojama kartu su pacientu suformuluoti mažą, pasiekiamą judėjimo tikslą (pvz., SMART formatu) ir pradėti nuo vaikščiojimo."
+    },
+    critLabel:"Kriterijus:",
+    crit:{
+      high1:"intensyvi veikla ≥ 3 d./sav. ir bendras balas ≥ 1500 MET-min./sav.",
+      high2:"aktyvumas ≥ 7 d./sav. (bet kokio derinio) ir bendras balas ≥ 3000 MET-min./sav.",
+      mod1:"intensyvi veikla ≥ 3 d./sav. po ≥ 20 min.",
+      mod2:"vidutinė veikla ir (ar) vaikščiojimas ≥ 5 d./sav. po ≥ 30 min.",
+      mod3:"bet kokia veikla ≥ 5 d./sav. ir bendras balas ≥ 600 MET-min./sav.",
+      low:"nepasiekiami vidutinio ar aukšto lygio kriterijai."
+    },
+    legend:{v:"Intensyvi", m:"Vidutinė", w:"Vaikščiojimas"},
+    whoOk:"Atitinka PSO rekomendaciją suaugusiesiems: ≥ 150–300 min. vidutinio intensyvumo (ar ekvivalentiškos) veiklos per savaitę.",
+    whoNo:"Kol kas nesiekia PSO rekomendacijos (≥ 150 min. vidutinio intensyvumo ar ekvivalentiškos veiklos per savaitę). Iki jos trūksta apie {n} min. vidutinės veiklos.",
+    sitHigh:"Sėdėjimas {h} val./d. — ilgas sėdėjimas yra savarankiškas rizikos veiksnys net ir aktyviems žmonėms. Rekomenduokite reguliarias pertraukas kas 30–60 min.",
+    sitOk:"Sėdėjimas {h} val./d.",
+    bandsRows:[
+      ["Žemas","Nepasiekiami vidutinio ar aukšto lygio kriterijai."],
+      ["Vidutinis","≥ 3 d. intensyvios veiklos po ≥ 20 min.; ARBA ≥ 5 d. vidutinės veiklos / vaikščiojimo po ≥ 30 min.; ARBA ≥ 5 aktyvios dienos ir ≥ 600 MET-min./sav."],
+      ["Aukštas","≥ 3 d. intensyvios veiklos ir ≥ 1500 MET-min./sav.; ARBA ≥ 7 aktyvios dienos ir ≥ 3000 MET-min./sav."]
+    ],
+    printBtn:"Spausdinti", clearBtn:"Išvalyti",
+    source:"Metodika: IPAQ-SF (Craig et al., 2003); balų skaičiavimas ir kategorijos pagal oficialų IPAQ vertinimo protokolą (MET: vaikščiojimas 3,3; vidutinė 4,0; intensyvi 8,0). PSO 2020 m. fizinio aktyvumo gairės.",
+    disclaimer:"Ši skaičiuoklė yra pagalbinė priemonė ir nepakeičia gydytojo konsultacijos."
+  },
+  en: {
+    title:"IPAQ-SF Physical Activity Calculator",
+    subtitle:"International Physical Activity Questionnaire — Short Form. Ask about the last 7 days, counting only activity lasting at least 10 minutes at a time. The score updates automatically.",
+    printPatient:"Patient", printDate:"Date",
+    vTitle:"Vigorous activity",
+    vQ:"During the last 7 days — heavy lifting, running, aerobics, fast bicycling (breathing much harder than normal).",
+    mTitle:"Moderate activity",
+    mQ:"During the last 7 days — carrying light loads, bicycling at a regular pace, doubles tennis (breathing somewhat harder than normal). Do not include walking.",
+    wTitle:"Walking",
+    wQ:"During the last 7 days — walking at work, at home, to travel from place to place, or for recreation (at least 10 minutes at a time).",
+    sitTitle:"Sitting (not included in the score)",
+    sitQ:"How many hours per day do you usually spend sitting on a weekday? (at work, at home, screen time, transport)",
+    sitUnit:"h per day",
+    daysLabel:"Days per week",
+    minLabel:"Average per day",
+    minUnit:"min",
+    errMin:"Enter minutes as a number (0–960)",
+    errSit:"Enter hours (0–24)",
+    truncShort:"Per the IPAQ protocol, bouts shorter than 10 min are not counted:",
+    truncLong:"Per the IPAQ protocol, more than 180 min/day is truncated to 180 min:",
+    truncNames:{v:"vigorous", m:"moderate", w:"walking"},
+    totalLabel:"Total physical activity",
+    cat:{high:"High", moderate:"Moderate", low:"Low"},
+    interp:{
+      high:"Physical activity level is high. Maintaining current habits is recommended; consider discussing activity variety and muscle-strengthening exercise.",
+      moderate:"Physical activity level is moderate. Consider discussing a gradual increase in frequency, duration or intensity.",
+      low:"Physical activity level is low. Setting a small, achievable movement goal together with the patient (e.g., in SMART format) is recommended, starting with walking."
+    },
+    critLabel:"Criterion:",
+    crit:{
+      high1:"vigorous activity ≥ 3 days/wk and total ≥ 1500 MET-min/wk.",
+      high2:"activity on ≥ 7 days/wk (any combination) and total ≥ 3000 MET-min/wk.",
+      mod1:"vigorous activity ≥ 3 days/wk of ≥ 20 min.",
+      mod2:"moderate activity and/or walking ≥ 5 days/wk of ≥ 30 min.",
+      mod3:"any activity ≥ 5 days/wk and total ≥ 600 MET-min/wk.",
+      low:"criteria for moderate or high level are not met."
+    },
+    legend:{v:"Vigorous", m:"Moderate", w:"Walking"},
+    whoOk:"Meets the WHO recommendation for adults: ≥ 150–300 min of moderate-intensity (or equivalent) activity per week.",
+    whoNo:"Does not yet meet the WHO recommendation (≥ 150 min of moderate-intensity or equivalent activity per week). About {n} min of moderate activity are missing.",
+    sitHigh:"Sitting {h} h/day — prolonged sitting is an independent risk factor even in active people. Recommend regular breaks every 30–60 min.",
+    sitOk:"Sitting {h} h/day.",
+    bandsRows:[
+      ["Low","Criteria for moderate or high level are not met."],
+      ["Moderate","≥ 3 days of vigorous activity of ≥ 20 min; OR ≥ 5 days of moderate activity/walking of ≥ 30 min; OR ≥ 5 active days and ≥ 600 MET-min/wk."],
+      ["High","≥ 3 days of vigorous activity and ≥ 1500 MET-min/wk; OR ≥ 7 active days and ≥ 3000 MET-min/wk."]
+    ],
+    printBtn:"Print", clearBtn:"Clear",
+    source:"Method: IPAQ-SF (Craig et al., 2003); scoring and categories per the official IPAQ scoring protocol (MET values: walking 3.3; moderate 4.0; vigorous 8.0). WHO 2020 physical activity guidelines.",
+    disclaimer:"This calculator is a supportive tool and does not replace a medical consultation."
+  }
+};
+
+let lang = 'lt';
+function t(k){ return i18n[lang][k]; }
+
+/* ============ STATE ============ */
+const state = { days:{v:0, m:0, w:0} };
+const CHIP_VALUES = [15,30,45,60,90];
+
+/* ============ NUMBER HANDLING ============ */
+function parseNum(v){
+  const s = String(v).trim().replace(',', '.');
+  if (s === '') return 0;
+  if (!/^\d*\.?\d+$/.test(s)) return NaN;
+  return parseFloat(s);
+}
+function fmtInt(n){ return n.toLocaleString(lang==='lt' ? 'lt-LT' : 'en-GB'); }
+
+/* ============ UI BUILD ============ */
+function buildDayPills(){
+  ['v','m','w'].forEach(k=>{
+    const box = document.getElementById('days-'+k);
+    box.innerHTML = '';
+    for(let d=0; d<=7; d++){
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = d;
+      b.setAttribute('aria-pressed', String(state.days[k]===d));
+      if(state.days[k]===d) b.classList.add('sel');
+      b.addEventListener('click', ()=>{
+        state.days[k] = d;
+        [...box.children].forEach((c,i)=>{
+          c.classList.toggle('sel', i===d);
+          c.setAttribute('aria-pressed', String(i===d));
+        });
+        calc();
+      });
+      box.appendChild(b);
+    }
+  });
+}
+function buildChips(){
+  document.querySelectorAll('.chips').forEach(box=>{
+    const inputId = box.dataset.for;
+    box.innerHTML = '';
+    CHIP_VALUES.forEach(v=>{
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = v;
+      b.addEventListener('click', ()=>{
+        document.getElementById(inputId).value = v;
+        calc();
+      });
+      box.appendChild(b);
+    });
+  });
+}
+function syncChips(){
+  document.querySelectorAll('.chips').forEach(box=>{
+    const val = parseNum(document.getElementById(box.dataset.for).value);
+    [...box.children].forEach(b=>{
+      b.classList.toggle('sel', parseFloat(b.textContent)===val);
+    });
+  });
+}
+
+/* ============ CALCULATION (official IPAQ scoring protocol) ============ */
+const MET = {w:3.3, m:4.0, v:8.0};
+
+function readMinutes(k){
+  const el = document.getElementById('min-'+k);
+  const err = document.getElementById('err-'+k);
+  const n = parseNum(el.value);
+  const bad = isNaN(n) || n<0 || n>960;
+  el.classList.toggle('invalid', bad);
+  err.textContent = bad ? t('errMin') : '';
+  return bad ? null : n;
+}
+
+function calc(){
+  const min = {v:readMinutes('v'), m:readMinutes('m'), w:readMinutes('w')};
+  if(min.v===null || min.m===null || min.w===null) return;
+
+  // truncation rules per protocol
+  const truncShort = [], truncLong = [];
+  const eff = {};        // effective minutes
+  const effDays = {};    // effective days (0 if bout <10 min)
+  ['v','m','w'].forEach(k=>{
+    if(min[k]>0 && min[k]<10 && state.days[k]>0){ truncShort.push(k); }
+    effDays[k] = (min[k]>=10) ? state.days[k] : 0;
+    if(min[k]>180){ truncLong.push(k); }
+    eff[k] = Math.min(min[k], 180);
+  });
+
+  const met = {
+    v: MET.v * eff.v * effDays.v,
+    m: MET.m * eff.m * effDays.m,
+    w: MET.w * eff.w * effDays.w
+  };
+  const total = Math.round(met.v + met.m + met.w);
+  const daysSum = effDays.v + effDays.m + effDays.w;
+
+  // category
+  let level, critKey;
+  if (effDays.v>=3 && total>=1500){ level='high'; critKey='high1'; }
+  else if (daysSum>=7 && total>=3000){ level='high'; critKey='high2'; }
+  else if (effDays.v>=3 && eff.v>=20){ level='moderate'; critKey='mod1'; }
+  else if (((eff.m>=30?effDays.m:0) + (eff.w>=30?effDays.w:0)) >= 5){ level='moderate'; critKey='mod2'; }
+  else if (daysSum>=5 && total>=600){ level='moderate'; critKey='mod3'; }
+  else { level='low'; critKey='low'; }
+
+  render({min, eff, effDays, met, total, level, critKey, truncShort, truncLong});
+}
+
+let last = null;
+
+function render(r){
+  last = r;
+  document.getElementById('total').textContent = fmtInt(r.total);
+
+  const badge = document.getElementById('badge');
+  badge.textContent = t('cat')[r.level];
+  badge.className = 'badge ' + (r.level==='high' ? 'ok' : r.level==='moderate' ? 'warn' : 'risk');
+
+  document.getElementById('interpretation').textContent = t('interp')[r.level];
+  document.getElementById('crit').textContent = t('critLabel') + ' ' + t('crit')[r.critKey];
+
+  // contribution bar + legend
+  const bar = document.getElementById('bar');
+  bar.innerHTML = '';
+  const totalRaw = r.met.v + r.met.m + r.met.w;
+  [['v','b-v'],['m','b-m'],['w','b-w']].forEach(([k,cls])=>{
+    if(r.met[k]>0 && totalRaw>0){
+      const seg = document.createElement('div');
+      seg.className = cls;
+      seg.style.width = (r.met[k]/totalRaw*100) + '%';
+      bar.appendChild(seg);
+    }
+  });
+  const legendColors = {v:'#b91c1c', m:'#b45309', w:'#0f766e'};
+  document.getElementById('legend').innerHTML = ['v','m','w'].map(k=>
+    `<span><i style="background:${legendColors[k]}"></i>${t('legend')[k]} ${fmtInt(Math.round(r.met[k]))}</span>`
+  ).join('');
+
+  // WHO comparison: moderate-equivalent minutes (vigorous counts double)
+  const modEq = r.eff.m*r.effDays.m + r.eff.w*r.effDays.w + 2*r.eff.v*r.effDays.v;
+  const who = document.getElementById('who');
+  if(modEq >= 150){
+    who.className = 'who ok';
+    who.textContent = t('whoOk');
+  } else {
+    who.className = 'who warn';
+    who.textContent = t('whoNo').replace('{n}', fmtInt(Math.ceil((150-modEq)/5)*5));
+  }
+
+  // sitting
+  const sitEl = document.getElementById('sit');
+  const sitErr = document.getElementById('err-sit');
+  const sitNote = document.getElementById('sitnote');
+  const raw = sitEl.value.trim();
+  if(raw===''){ sitErr.textContent=''; sitEl.classList.remove('invalid'); sitNote.textContent=''; }
+  else {
+    const h = parseNum(raw);
+    const bad = isNaN(h) || h<0 || h>24;
+    sitEl.classList.toggle('invalid', bad);
+    sitErr.textContent = bad ? t('errSit') : '';
+    if(bad){ sitNote.textContent=''; }
+    else {
+      const hh = lang==='lt' ? String(raw).replace('.',',') : String(raw).replace(',','.');
+      sitNote.textContent = (h>=8 ? t('sitHigh') : t('sitOk')).replace('{h}', hh);
+    }
+  }
+
+  // truncation notes
+  const tn = document.getElementById('truncNote');
+  const parts = [];
+  if(r.truncShort.length) parts.push(t('truncShort') + ' ' + r.truncShort.map(k=>t('truncNames')[k]).join(', ') + '.');
+  if(r.truncLong.length)  parts.push(t('truncLong') + ' ' + r.truncLong.map(k=>t('truncNames')[k]).join(', ') + '.');
+  tn.textContent = parts.join(' ');
+  tn.classList.toggle('show', parts.length>0);
+
+  // bands table
+  const order = ['low','moderate','high'];
+  document.getElementById('bands').innerHTML = t('bandsRows').map((row,i)=>
+    `<tr class="${order[i]===r.level?'current':''}"><td>${row[0]}</td><td>${row[1]}</td></tr>`
+  ).join('');
+}
+
+/* ============ LANGUAGE ============ */
+function setLang(l){
+  lang = l;
+  document.documentElement.lang = l;
+  document.getElementById('btn-lt').classList.toggle('active', l==='lt');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelector('.result-unit').textContent = l==='lt' ? 'MET-min./sav.' : 'MET-min/wk';
+  calc();
+}
+
+/* ============ EVENTS / RESET / INIT ============ */
+['v','m','w'].forEach(k=>{
+  document.getElementById('min-'+k).addEventListener('input', ()=>{ syncChips(); calc(); });
+});
+document.getElementById('sit').addEventListener('input', calc);
+document.querySelectorAll('.chips').forEach(box=>{
+  box.addEventListener('click', syncChips);
+});
+
+function resetForm(){
+  state.days = {v:0, m:0, w:0};
+  buildDayPills();
+  ['v','m','w'].forEach(k=>{
+    const el = document.getElementById('min-'+k);
+    el.value=''; el.classList.remove('invalid');
+    document.getElementById('err-'+k).textContent='';
+  });
+  document.getElementById('sit').value='';
+  document.getElementById('err-sit').textContent='';
+  syncChips();
+  calc();
+}
+
+buildDayPills();
+buildChips();
+setLang('lt');
+</script>
+</body>
+</html>
