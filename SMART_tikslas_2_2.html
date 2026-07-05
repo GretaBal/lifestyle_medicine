@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMART tikslas | SMART Goal</title>
+<style>
+  :root{
+    --bg:#EAF2F2; --card:#FFFFFF; --ink:#16323B; --muted:#5E7079;
+    --accent:#0E8A8F; --accent-deep:#0B6B6F; --accent-soft:#E6F2F1; --line:#DBE6E6; --soft:#F2F8F8;
+    --low:#C1473F; --mid:#D9A441; --high:#2E8B57;
+    --warn-bg:#FDF3E3; --warn:#B45309;
+    --shadow:0 1px 2px rgba(20,50,59,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink); overflow-x:hidden;
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.5; padding:24px 16px}
+  .wrap{max-width:840px; margin:0 auto}
+
+  header{display:flex; align-items:flex-start; justify-content:space-between; gap:16px}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-deep); font-weight:700}
+  h1{font-size:25px; margin:6px 0 2px; letter-spacing:-.01em}
+  .sub{color:var(--muted); font-size:14px; margin:0 0 18px; max-width:600px}
+
+  .lang-toggle{display:flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--card); box-shadow:var(--shadow); flex:0 0 auto; margin-top:4px}
+  .lang-toggle button{border:0; background:transparent; padding:7px 16px; font:inherit; font-weight:700; font-size:13px; color:var(--muted); cursor:pointer}
+  .lang-toggle button.active{background:var(--accent); color:#fff}
+  .lang-toggle button:focus-visible{outline:2px solid var(--accent-deep); outline-offset:-2px}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:var(--shadow); margin-bottom:16px}
+  h2{font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-deep); margin:0 0 6px; font-weight:700}
+  .card-sub{font-size:13px; color:var(--muted); margin:0 0 16px}
+
+  .letter-badge{display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:9px;
+    background:var(--accent); color:#fff; font-weight:800; font-size:15px; margin-right:10px; flex:0 0 auto}
+  .letter-head{display:flex; align-items:center; margin-bottom:4px}
+  .letter-head h2{margin:0}
+
+  label{display:block; font-weight:700; font-size:13.5px; margin:14px 0 4px}
+  label:first-of-type{margin-top:0}
+  .hint{font-weight:400; color:var(--muted); font-size:12.5px; font-style:italic; display:block; margin-bottom:6px}
+  input[type=text], input[type=date], textarea, select{
+    width:100%; padding:10px 12px; font:inherit; font-size:14px; color:var(--ink);
+    border:1.5px solid var(--line); border-radius:10px; background:#fff}
+  textarea{resize:vertical; min-height:58px}
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:600px){ .grid2{grid-template-columns:1fr} }
+
+  /* rulers */
+  .ruler{margin-top:6px}
+  .ruler-head{display:flex; justify-content:space-between; align-items:baseline}
+  .ruler-val{font-weight:800; font-size:17px; color:var(--accent-deep)}
+  input[type=range]{width:100%; height:6px; border-radius:999px; appearance:none;
+    background:linear-gradient(90deg,var(--low),var(--mid) 50%,var(--high)); outline:none; margin-top:8px}
+  input[type=range]::-webkit-slider-thumb{appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--accent-deep); cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--accent-deep); cursor:pointer}
+  .scale{display:flex; justify-content:space-between; font-size:10.5px; color:#9AA7AD; margin-top:2px}
+  .mi-nudge{display:none; margin-top:10px; background:var(--warn-bg); color:var(--warn); border-radius:10px; padding:10px 13px; font-size:13px}
+  .mi-nudge.show{display:block}
+  .mi-nudge b{display:block; margin-bottom:2px}
+
+  /* if-then rows */
+  .ifthen{display:grid; grid-template-columns:auto 1fr; gap:8px 10px; align-items:center; margin-top:8px}
+  .ifthen .kw{font-weight:800; color:var(--accent-deep); font-size:13px; text-transform:uppercase; letter-spacing:.05em}
+
+  /* summary */
+  .summaryCard{background:linear-gradient(135deg,#0E8A8F,#0B6B6F); color:#fff; border:none}
+  .summaryCard h2{color:rgba(255,255,255,.85)}
+  .summary-text{font-size:16.5px; line-height:1.65; font-weight:500; margin:4px 0 0}
+  .summary-text .ph{opacity:.55; font-style:italic}
+  .summary-meta{margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,.25); font-size:13px; display:flex; flex-wrap:wrap; gap:8px 22px}
+  .summary-meta span b{font-weight:800}
+
+  .actions{display:flex; gap:10px; flex-wrap:wrap; margin:4px 0 18px}
+  .btn{border:0; border-radius:10px; padding:11px 20px; font:inherit; font-weight:700; font-size:14px; cursor:pointer}
+  .btn-primary{background:var(--accent); color:#fff}
+  .btn-primary:hover{filter:brightness(1.06)}
+  .btn-ghost{background:#fff; color:var(--muted); border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent-deep)}
+  .btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+
+  footer.legal{color:var(--muted); font-size:11.5px; margin-top:6px}
+  footer.legal p{margin:3px 0}
+
+  /* ============ DEDICATED PRINT SHEET ============ */
+  #printSheet{display:none}
+  @media print{
+    @page{margin:0}
+    body{background:#fff; padding:0; color:#16323B}
+    #app{display:none!important}
+    #printSheet{display:block; font-size:13px; line-height:1.6; padding:18mm 16mm}
+
+    .ps-head{display:flex; justify-content:space-between; align-items:flex-end;
+      border-bottom:2.5px solid var(--accent); padding-bottom:10px; margin-bottom:16px}
+    .ps-eyebrow{font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent-deep); font-weight:700}
+    .ps-title{font-size:22px; font-weight:800; letter-spacing:-.01em; margin-top:2px}
+    .ps-date{font-size:12px; color:var(--muted)}
+
+    .ps-patient{font-size:13px; margin-bottom:18px}
+    .ps-line{display:inline-block; min-width:260px; border-bottom:1px solid #999}
+
+    .ps-goalbox{border:2px solid var(--accent); border-radius:12px; padding:16px 18px; margin-bottom:18px;
+      break-inside:avoid}
+    .ps-goallabel{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; margin-bottom:6px}
+    .ps-goal{font-size:15.5px; line-height:1.7; white-space:pre-wrap}
+
+    .ps-details{width:100%; border-collapse:collapse; margin-bottom:6px}
+    .ps-details td{padding:7px 0; border-bottom:1px solid var(--line); vertical-align:top; font-size:12.5px}
+    .ps-details td:first-child{width:34%; font-weight:700; color:var(--accent-deep); padding-right:14px}
+    .ps-details td:last-child{white-space:pre-wrap}
+
+    .ps-signs{display:flex; gap:44px; margin-top:34px; font-size:11.5px; color:var(--muted)}
+    .ps-signs div{flex:1; border-top:1px solid #999; padding-top:5px}
+
+    .ps-footer{margin-top:20px; font-size:10px; color:var(--muted)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <div class="eyebrow" data-i18n="eyebrow"></div>
+      <h1 data-i18n="title"></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Kalba / Language">
+      <button id="btn-lt" onclick="setLang('lt')">LT</button>
+      <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <!-- Sritis -->
+  <div class="card">
+    <h2 data-i18n="domainHeader"></h2>
+    <p class="card-sub" data-i18n="domainSub"></p>
+    <div class="grid2">
+      <div>
+        <label for="domain" data-i18n="domainLabel"></label>
+        <select id="domain"></select>
+      </div>
+      <div>
+        <label for="whyNow" data-i18n="whyNowLabel"></label>
+        <input type="text" id="whyNow" data-ph="whyNowPh" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <!-- S -->
+  <div class="card">
+    <div class="letter-head"><span class="letter-badge">S</span><h2 data-i18n="sHeader"></h2></div>
+    <p class="card-sub" data-i18n="sSub"></p>
+    <label for="specific" data-i18n="sLabel"></label>
+    <span class="hint" data-i18n="sHint"></span>
+    <textarea id="specific" data-ph="sPh"></textarea>
+  </div>
+
+  <!-- M -->
+  <div class="card">
+    <div class="letter-head"><span class="letter-badge">M</span><h2 data-i18n="mHeader"></h2></div>
+    <p class="card-sub" data-i18n="mSub"></p>
+    <div class="grid2">
+      <div>
+        <label for="measureHow" data-i18n="mHowLabel"></label>
+        <span class="hint" data-i18n="mHowHint"></span>
+        <input type="text" id="measureHow" data-ph="mHowPh" autocomplete="off">
+      </div>
+      <div>
+        <label for="measureFreq" data-i18n="mFreqLabel"></label>
+        <span class="hint" data-i18n="mFreqHint"></span>
+        <input type="text" id="measureFreq" data-ph="mFreqPh" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <!-- A -->
+  <div class="card">
+    <div class="letter-head"><span class="letter-badge">A</span><h2 data-i18n="aHeader"></h2></div>
+    <p class="card-sub" data-i18n="aSub"></p>
+    <div class="grid2">
+      <div class="ruler">
+        <div class="ruler-head"><label style="margin:0" data-i18n="importanceLabel"></label><span class="ruler-val" id="importanceVal">7</span></div>
+        <input type="range" min="0" max="10" step="1" value="7" id="importance">
+        <div class="scale"><span>0</span><span>5</span><span>10</span></div>
+      </div>
+      <div class="ruler">
+        <div class="ruler-head"><label style="margin:0" data-i18n="confidenceLabel"></label><span class="ruler-val" id="confidenceVal">7</span></div>
+        <input type="range" min="0" max="10" step="1" value="7" id="confidence">
+        <div class="scale"><span>0</span><span>5</span><span>10</span></div>
+      </div>
+    </div>
+    <div class="mi-nudge" id="miNudge"></div>
+  </div>
+
+  <!-- R -->
+  <div class="card">
+    <div class="letter-head"><span class="letter-badge">R</span><h2 data-i18n="rHeader"></h2></div>
+    <p class="card-sub" data-i18n="rSub"></p>
+    <label for="relevant" data-i18n="rLabel"></label>
+    <span class="hint" data-i18n="rHint"></span>
+    <textarea id="relevant" data-ph="rPh"></textarea>
+  </div>
+
+  <!-- T -->
+  <div class="card">
+    <div class="letter-head"><span class="letter-badge">T</span><h2 data-i18n="tHeader"></h2></div>
+    <p class="card-sub" data-i18n="tSub"></p>
+    <div class="grid2">
+      <div>
+        <label for="startDate" data-i18n="tStartLabel"></label>
+        <input type="date" id="startDate">
+      </div>
+      <div>
+        <label for="reviewDate" data-i18n="tReviewLabel"></label>
+        <span class="hint" data-i18n="tReviewHint"></span>
+        <input type="date" id="reviewDate">
+      </div>
+    </div>
+  </div>
+
+  <!-- Planas ir barjerai -->
+  <div class="card">
+    <h2 data-i18n="planHeader"></h2>
+    <p class="card-sub" data-i18n="planSub"></p>
+    <div class="ifthen">
+      <span class="kw" data-i18n="ifWord"></span>
+      <input type="text" id="ifPart" data-ph="ifPh" autocomplete="off">
+      <span class="kw" data-i18n="thenWord"></span>
+      <input type="text" id="thenPart" data-ph="thenPh" autocomplete="off">
+    </div>
+    <label for="barrier" data-i18n="barrierLabel"></label>
+    <span class="hint" data-i18n="barrierHint"></span>
+    <input type="text" id="barrier" data-ph="barrierPh" autocomplete="off">
+    <label for="barrierPlan" data-i18n="barrierPlanLabel"></label>
+    <input type="text" id="barrierPlan" data-ph="barrierPlanPh" autocomplete="off">
+    <label for="support" data-i18n="supportLabel"></label>
+    <span class="hint" data-i18n="supportHint"></span>
+    <input type="text" id="support" data-ph="supportPh" autocomplete="off">
+  </div>
+
+  <!-- Santrauka -->
+  <div class="card summaryCard" id="rawSummaryCard">
+    <h2 data-i18n="summaryHeader"></h2>
+    <p class="summary-text" id="summaryText"></p>
+    <div class="summary-meta" id="summaryMeta"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="printSheet()" data-i18n="printBtn"></button>
+    <button class="btn btn-ghost" onclick="resetForm()" data-i18n="clearBtn"></button>
+  </div>
+
+  <footer class="legal">
+    <p data-i18n="source"></p>
+    <p data-i18n="disclaimer"></p>
+  </footer>
+</div>
+
+<!-- ============ DEDICATED PRINT SHEET (hidden on screen) ============ -->
+<div id="printSheet" aria-hidden="true">
+  <div class="ps-head">
+    <div>
+      <div class="ps-eyebrow" data-i18n-print="psEyebrow"></div>
+      <div class="ps-title" data-i18n-print="psTitle"></div>
+    </div>
+    <div class="ps-date" id="psToday"></div>
+  </div>
+
+  <div class="ps-patient"><span data-i18n-print="printPatient"></span>: <span class="ps-line"></span></div>
+
+  <div class="ps-goalbox">
+    <div class="ps-goallabel" data-i18n-print="psGoalLabel"></div>
+    <div class="ps-goal" id="psGoal"></div>
+  </div>
+
+  <table class="ps-details" id="psDetails"></table>
+
+  <div class="ps-signs">
+    <div><span data-i18n-print="sigPatient"></span></div>
+    <div><span data-i18n-print="sigClinician"></span></div>
+  </div>
+
+  <div class="ps-footer" data-i18n-print="disclaimer"></div>
+</div>
+
+<script>
+/* ============ I18N ============ */
+const i18n = {
+  lt: {
+    eyebrow:"Gyvensenos medicina · konsultacijos įrankis",
+    title:"SMART tikslo lapas",
+    subtitle:"Pildykite kartu su pacientu konsultacijos pabaigoje. Santrauka apačioje formuojasi automatiškai — ją galima atspausdinti pacientui ir įsegti į kortelę.",
+    printPatient:"Pacientas", printDate:"Data",
+    psEyebrow:"Gyvensenos medicina",
+    psTitle:"Mano SMART tikslas",
+    psGoalLabel:"Mano tikslas",
+    psDomain:"Sritis",
+    psWhyNow:"Kodėl tai svarbu dabar",
+    psWhen:"Kada tai darysiu",
+    psMeasure:"Kaip matuosiu",
+    psRelevant:"Kodėl man tai aktualu",
+    psScales:"Svarba / pasitikėjimas",
+    psIfThen:"Jei kas nors sutrukdys",
+    psBarrier:"Numatyta kliūtis ir planas",
+    psSupport:"Mane palaikys",
+    psStart:"Pradedu nuo",
+    psReview:"Peržiūrėsime kartu",
+
+    domainHeader:"Sritis ir motyvas",
+    domainSub:"Dažniausiai pasirenkama žemiausiai Gyvensenos rate įvertinta sritis — bet svarbiausia, kad ją rinktųsi pats pacientas.",
+    domainLabel:"Gyvensenos sritis",
+    whyNowLabel:"Kodėl šis pokytis svarbus dabar?",
+    whyNowPh:"pvz., noriu turėti daugiau energijos vaikams",
+    domains:["Mityba","Fizinis aktyvumas","Miegas","Žalingi įpročiai","Psichikos gerovė","Kita"],
+
+    sHeader:"Specifinis (Specific)",
+    sSub:"Ne „daugiau judėsiu“, o kas tiksliai, kur ir kaip.",
+    sLabel:"Ką tiksliai darysiu?",
+    sHint:"Konkretus veiksmas, vieta, trukmė. Pradėkite nuo veiksmažodžio.",
+    sPh:"pvz., eisiu 30 min. greitu žingsniu Vingio parke",
+
+    mHeader:"Išmatuojamas (Measurable)",
+    mSub:"Kaip abu žinosite, kad tikslas vykdomas?",
+    mHowLabel:"Kaip matuosiu?",
+    mHowHint:"Skaičius, dažnis, žingsniai, dienoraštis, programėlė...",
+    mHowPh:"pvz., 3 kartus per savaitę, žymėsiuosi kalendoriuje",
+    mFreqLabel:"Kada tai darysiu?",
+    mFreqHint:"Konkrečios dienos ir laikas didina tikimybę įvykdyti.",
+    mFreqPh:"pvz., pirmadieniais, trečiadieniais ir šeštadieniais po darbo",
+
+    aHeader:"Pasiekiamas (Achievable)",
+    aSub:"Motyvacinio interviu skalės: aptarkite balsu — „Kodėl ne mažiau?“ ir „Ko reikėtų, kad balas pakiltų vienu?“",
+    importanceLabel:"Kiek tai man svarbu?",
+    confidenceLabel:"Kiek pasitikiu, kad pavyks?",
+    miNudgeLow:"Pasitikėjimas žemesnis nei 7.",
+    miNudgeText:"Verta sumažinti tikslą, kol pacientas pasakys „tikrai pavyks“ — mažas įvykdytas tikslas vertingesnis už ambicingą neįvykdytą. Klauskite: „Kas padėtų balui pakilti iki 7–8?“",
+
+    rHeader:"Aktualus (Relevant)",
+    rSub:"Tikslas turi sietis su paties paciento vertybėmis, ne su specialisto norais.",
+    rLabel:"Kaip šis tikslas susijęs su tuo, kas man svarbiausia?",
+    rHint:"Sveikata, šeima, darbas, savijauta — paciento žodžiais.",
+    rPh:"pvz., mažesnis spaudimas leis atsisakyti papildomo vaisto",
+
+    tHeader:"Apibrėžtas laike (Time-bound)",
+    tSub:"Pradžios data ir sutarta peržiūra — be jos tikslas lieka pageidavimu.",
+    tStartLabel:"Pradedu nuo",
+    tReviewLabel:"Peržiūrėsime kartu",
+    tReviewHint:"Rekomenduojama po 2–4 savaičių — telefonu arba vizito metu.",
+
+    planHeader:"Įgyvendinimo planas",
+    planSub:"„Jei–tada“ planai (implementation intentions) ženkliai padidina tikslų įvykdymą.",
+    ifWord:"Jei",
+    thenWord:"tada",
+    ifPh:"pvz., lyja ir negaliu eiti į parką",
+    thenPh:"pvz., 30 min. mankštinsiuosi namuose pagal video",
+    barrierLabel:"Didžiausia numatoma kliūtis",
+    barrierHint:"Ką pacientas pats įvardija kaip labiausiai tikėtiną trukdį?",
+    barrierPh:"pvz., vakare nebeturiu jėgų",
+    barrierPlanLabel:"Kaip ją įveiksiu?",
+    barrierPlanPh:"pvz., eisiu ryte prieš darbą, rūbus pasiruošiu vakare",
+    supportLabel:"Kas mane palaikys?",
+    supportHint:"Konkretus žmogus ar aplinka, kuriai pacientas pasakys apie tikslą.",
+    supportPh:"pvz., vyras eis kartu šeštadieniais",
+
+    summaryHeader:"Mano SMART tikslas",
+    sigPatient:"Paciento parašas",
+    sigClinician:"Specialisto parašas",
+    printBtn:"Spausdinti pacientui",
+    clearBtn:"Išvalyti",
+
+    sumFrom:"nuo",
+    sumMeasure:"Matuosiu:",
+    sumWhen:"Kada:",
+    sumReview:"Peržiūra:",
+    sumImportance:"Svarba",
+    sumConfidence:"Pasitikėjimas",
+    phGoal:"— tikslas formuojasi pildant laukus aukščiau —",
+
+    source:"Metodika: SMART kriterijai; motyvacinio interviu svarbos ir pasitikėjimo skalės (Miller & Rollnick); „jei–tada“ planavimas (Gollwitzer, implementation intentions).",
+    disclaimer:"Šis įrankis yra pagalbinė priemonė ir nepakeičia gydytojo konsultacijos."
+  },
+  en: {
+    eyebrow:"Lifestyle Medicine · consultation tool",
+    title:"SMART Goal Worksheet",
+    subtitle:"Complete together with the patient at the end of the consultation. The summary below builds automatically — print it for the patient and file a copy in the chart.",
+    printPatient:"Patient", printDate:"Date",
+    psEyebrow:"Lifestyle Medicine",
+    psTitle:"My SMART Goal",
+    psGoalLabel:"My goal",
+    psDomain:"Domain",
+    psWhyNow:"Why this matters now",
+    psWhen:"When I will do it",
+    psMeasure:"How I will measure it",
+    psRelevant:"Why this matters to me",
+    psScales:"Importance / confidence",
+    psIfThen:"If something gets in the way",
+    psBarrier:"Anticipated barrier and plan",
+    psSupport:"My support",
+    psStart:"Starting from",
+    psReview:"We will review together on",
+
+    domainHeader:"Domain and motive",
+    domainSub:"Usually the lowest-scoring domain on the Lifestyle Wheel — but what matters most is that the patient chooses it themselves.",
+    domainLabel:"Lifestyle domain",
+    whyNowLabel:"Why does this change matter now?",
+    whyNowPh:"e.g., I want more energy for my kids",
+    domains:["Nutrition","Physical activity","Sleep","Harmful habits","Mental wellbeing","Other"],
+
+    sHeader:"Specific",
+    sSub:"Not \u201cI'll move more\u201d — but what exactly, where and how.",
+    sLabel:"What exactly will I do?",
+    sHint:"A concrete action, place, duration. Start with a verb.",
+    sPh:"e.g., walk briskly for 30 min in the park",
+
+    mHeader:"Measurable",
+    mSub:"How will you both know the goal is on track?",
+    mHowLabel:"How will I measure it?",
+    mHowHint:"A number, frequency, steps, diary, an app...",
+    mHowPh:"e.g., 3 times a week, marked on my calendar",
+    mFreqLabel:"When will I do it?",
+    mFreqHint:"Specific days and times increase follow-through.",
+    mFreqPh:"e.g., Mondays, Wednesdays and Saturdays after work",
+
+    aHeader:"Achievable",
+    aSub:"Motivational interviewing rulers: discuss out loud — \u201cWhy not lower?\u201d and \u201cWhat would raise it by one point?\u201d",
+    importanceLabel:"How important is this to me?",
+    confidenceLabel:"How confident am I that I'll succeed?",
+    miNudgeLow:"Confidence is below 7.",
+    miNudgeText:"Consider scaling the goal down until the patient says \u201cI can definitely do this\u201d — a small goal achieved beats an ambitious one abandoned. Ask: \u201cWhat would bring this up to a 7–8?\u201d",
+
+    rHeader:"Relevant",
+    rSub:"The goal must connect to the patient's own values, not the clinician's wishes.",
+    rLabel:"How does this goal connect to what matters most to me?",
+    rHint:"Health, family, work, wellbeing — in the patient's own words.",
+    rPh:"e.g., lower blood pressure may let me drop one medication",
+
+    tHeader:"Time-bound",
+    tSub:"A start date and an agreed review — without them the goal remains a wish.",
+    tStartLabel:"Starting from",
+    tReviewLabel:"We will review together on",
+    tReviewHint:"Recommended in 2–4 weeks — by phone or at a visit.",
+
+    planHeader:"Implementation plan",
+    planSub:"\u201cIf–then\u201d plans (implementation intentions) substantially increase goal completion.",
+    ifWord:"If",
+    thenWord:"then",
+    ifPh:"e.g., it rains and I can't go to the park",
+    thenPh:"e.g., I'll do a 30-min home workout video",
+    barrierLabel:"Biggest anticipated barrier",
+    barrierHint:"What does the patient themselves name as the most likely obstacle?",
+    barrierPh:"e.g., no energy left in the evenings",
+    barrierPlanLabel:"How will I overcome it?",
+    barrierPlanPh:"e.g., go in the morning before work, lay out clothes the night before",
+    supportLabel:"Who will support me?",
+    supportHint:"A specific person or environment the patient will tell about the goal.",
+    supportPh:"e.g., my husband will join on Saturdays",
+
+    summaryHeader:"My SMART goal",
+    sigPatient:"Patient signature",
+    sigClinician:"Clinician signature",
+    printBtn:"Print for patient",
+    clearBtn:"Clear",
+
+    sumFrom:"from",
+    sumMeasure:"Measure:",
+    sumWhen:"When:",
+    sumReview:"Review:",
+    sumImportance:"Importance",
+    sumConfidence:"Confidence",
+    phGoal:"— the goal builds itself as you fill in the fields above —",
+
+    source:"Method: SMART criteria; motivational interviewing importance and confidence rulers (Miller & Rollnick); if–then planning (Gollwitzer, implementation intentions).",
+    disclaimer:"This tool is a supportive aid and does not replace a medical consultation."
+  }
+};
+
+let lang = 'lt';
+function t(key){ return i18n[lang][key]; }
+
+const textFields = ["whyNow","specific","measureHow","measureFreq","relevant","ifPart","thenPart","barrier","barrierPlan","support"];
+
+function setLang(l){
+  lang = l;
+  document.documentElement.lang = l;
+  document.getElementById('btn-lt').classList.toggle('active', l==='lt');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-print]').forEach(el=>{ el.textContent = t(el.dataset.i18nPrint); });
+  document.querySelectorAll('[data-ph]').forEach(el=>{ el.placeholder = t(el.dataset.ph); });
+  renderDomainOptions();
+  renderSummary();
+  renderNudge();
+}
+
+function renderDomainOptions(){
+  const sel = document.getElementById('domain');
+  const prev = sel.selectedIndex >= 0 ? sel.selectedIndex : 0;
+  sel.innerHTML = "";
+  t('domains').forEach((name,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = name;
+    sel.appendChild(opt);
+  });
+  sel.selectedIndex = Math.min(prev, sel.options.length-1);
+}
+
+/* ============ DATE FORMAT ============ */
+function fmtDate(iso){
+  if(!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if(isNaN(d)) return "";
+  return d.toLocaleDateString(lang==='lt' ? 'lt-LT' : 'en-GB', {year:'numeric', month:'long', day:'numeric'});
+}
+
+/* ============ LIVE SUMMARY ============ */
+function esc(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function renderSummary(){
+  const v = id => document.getElementById(id).value.trim();
+  const specific = v('specific');
+  const how = v('measureHow');
+  const when = v('measureFreq');
+  const start = fmtDate(v('startDate'));
+  const review = fmtDate(v('reviewDate'));
+  const imp = document.getElementById('importance').value;
+  const conf = document.getElementById('confidence').value;
+
+  const el = document.getElementById('summaryText');
+  if(!specific){
+    el.innerHTML = `<span class="ph">${t('phGoal')}</span>`;
+  } else {
+    let s = specific;
+    if(start) s += ` — ${t('sumFrom')} ${start}`;
+    if(!/[.!?]$/.test(s)) s += ".";
+    el.textContent = s;   // textContent — no HTML injection possible
+  }
+
+  const meta = [];
+  if(how)   meta.push(`<span><b>${t('sumMeasure')}</b> ${esc(how)}</span>`);
+  if(when)  meta.push(`<span><b>${t('sumWhen')}</b> ${esc(when)}</span>`);
+  if(review)meta.push(`<span><b>${t('sumReview')}</b> ${esc(review)}</span>`);
+  meta.push(`<span><b>${t('sumImportance')}:</b> ${imp}/10</span>`);
+  meta.push(`<span><b>${t('sumConfidence')}:</b> ${conf}/10</span>`);
+  document.getElementById('summaryMeta').innerHTML = meta.join("");
+}
+
+/* ============ MI NUDGE ============ */
+function renderNudge(){
+  const conf = parseInt(document.getElementById('confidence').value,10);
+  const n = document.getElementById('miNudge');
+  if(conf < 7){
+    n.innerHTML = `<b>${t('miNudgeLow')}</b>${t('miNudgeText')}`;
+    n.classList.add('show');
+  } else {
+    n.classList.remove('show');
+  }
+}
+
+/* ============ AI PATIENT VERSION (multi-agent) ============ */
+function gatherFields(){
+  const v = id => document.getElementById(id).value.trim();
+  const sel = document.getElementById('domain');
+  return {
+    sritis: sel.options[sel.selectedIndex]?.textContent || "",
+    kodel_dabar: v('whyNow'),
+    ka_darysiu: v('specific'),
+    kaip_matuosiu: v('measureHow'),
+    kada: v('measureFreq'),
+    svarba: document.getElementById('importance').value + "/10",
+    pasitikejimas: document.getElementById('confidence').value + "/10",
+    kodel_aktualu: v('relevant'),
+    pradzia: fmtDate(v('startDate')),
+    perziura: fmtDate(v('reviewDate')),
+    jei: v('ifPart'),
+    tada: v('thenPart'),
+    kliutis: v('barrier'),
+    kliuties_planas: v('barrierPlan'),
+    palaikymas: v('support')
+  };
+}
+
+/* ============ PRINT SHEET ============ */
+function buildPrintSheet(){
+  const f = gatherFields();
+
+  // header date
+  document.getElementById('psToday').textContent =
+    new Date().toLocaleDateString(lang==='lt' ? 'lt-LT' : 'en-GB', {year:'numeric', month:'long', day:'numeric'});
+
+  // goal text composed from the specialist's input
+  let goal = f.ka_darysiu || "";
+  if(goal && f.pradzia) goal += ` — ${t('sumFrom')} ${f.pradzia}`;
+  if(goal && !/[.!?]$/.test(goal)) goal += ".";
+  document.getElementById('psGoal').textContent = goal;
+
+  // detail rows — only filled fields, no empty lines
+  const rows = [];
+  const add = (labelKey, value)=>{ if(value) rows.push([t(labelKey), value]); };
+  add('psDomain', f.sritis);
+  add('psWhyNow', f.kodel_dabar);
+  add('psWhen', f.kada);
+  add('psMeasure', f.kaip_matuosiu);
+  add('psRelevant', f.kodel_aktualu);
+  add('psScales', `${t('sumImportance')} ${f.svarba} · ${t('sumConfidence').toLowerCase()} ${f.pasitikejimas}`);
+  if(f.jei || f.tada){
+    if(f.jei && f.tada) add('psIfThen', `${t('ifWord')} ${f.jei} — ${f.tada}`);
+    else add('psIfThen', f.jei ? `${t('ifWord')} ${f.jei}` : f.tada);
+  }
+  if(f.kliutis || f.kliuties_planas){
+    add('psBarrier', f.kliutis && f.kliuties_planas ? `${f.kliutis} → ${f.kliuties_planas}` : (f.kliutis || f.kliuties_planas));
+  }
+  add('psSupport', f.palaikymas);
+  add('psStart', f.pradzia);
+  add('psReview', f.perziura);
+
+  const table = document.getElementById('psDetails');
+  table.innerHTML = "";
+  rows.forEach(([label,value])=>{
+    const tr = document.createElement('tr');
+    const td1 = document.createElement('td'); td1.textContent = label;
+    const td2 = document.createElement('td'); td2.textContent = value;
+    tr.appendChild(td1); tr.appendChild(td2);
+    table.appendChild(tr);
+  });
+}
+
+function printSheet(){
+  buildPrintSheet();
+  window.print();
+}
+window.addEventListener('beforeprint', buildPrintSheet); // covers Ctrl/Cmd+P too
+
+/* ============ EVENTS ============ */
+textFields.forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderSummary);
+});
+['startDate','reviewDate'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderSummary);
+});
+['importance','confidence'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', e=>{
+    document.getElementById(id+'Val').textContent = e.target.value;
+    renderNudge();
+    renderSummary();
+  });
+});
+
+function resetForm(){
+  textFields.forEach(id=>{ document.getElementById(id).value=""; });
+  ['startDate','reviewDate'].forEach(id=>{ document.getElementById(id).value=""; });
+  ['importance','confidence'].forEach(id=>{
+    document.getElementById(id).value = 7;
+    document.getElementById(id+'Val').textContent = 7;
+  });
+  document.getElementById('domain').selectedIndex = 0;
+  renderNudge();
+  renderSummary();
+}
+
+/* ============ INIT ============ */
+// default start date = today, review = +3 weeks
+(function(){
+  const today = new Date();
+  const iso = d => d.toISOString().slice(0,10);
+  document.getElementById('startDate').value = iso(today);
+  const review = new Date(today); review.setDate(review.getDate()+21);
+  document.getElementById('reviewDate').value = iso(review);
+})();
+setLang('lt');
+</script>
+</body>
+</html>
