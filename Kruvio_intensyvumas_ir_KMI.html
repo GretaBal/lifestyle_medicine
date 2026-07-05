@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fizinio krūvio ir KMI įrankis</title>
+<style>
+  :root{
+    --bg:#EAF2F2; --card:#FFFFFF; --ink:#16323B; --muted:#5E7079;
+    --accent:#0E8A8F; --accent-deep:#0B6B6F; --line:#DBE6E6; --soft:#F2F8F8;
+    --warn-bg:#FFF6E8; --warn-ink:#8A5A12; --warn-line:#F0DCB8;
+    --stop-bg:#FCEDEC; --stop-ink:#A4332B; --stop-line:#F0C9C5;
+    --good-bg:#EAF6EF; --good-ink:#1F6B45;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.5; padding:24px 16px}
+  .wrap{max-width:640px; margin:0 auto}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-deep); font-weight:700}
+  h1{font-size:25px; margin:6px 0 2px; letter-spacing:-.01em}
+  .sub{color:var(--muted); font-size:14px; margin:0 0 16px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:16px; box-shadow:0 1px 2px rgba(20,50,59,.04)}
+  h2{font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-deep); margin:0 0 14px; font-weight:700}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .field{display:flex; flex-direction:column; gap:6px}
+  .field.full{grid-column:1 / -1}
+  label{font-size:13px; font-weight:600}
+  .hint{font-size:11px; color:var(--muted); font-weight:400}
+  input[type=number]{font:inherit; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); width:100%; -webkit-appearance:none; appearance:none}
+  input:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
+  .seg{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  .seg button{flex:1; font:inherit; font-weight:600; font-size:13px; padding:10px 6px; border:0; background:#fff; color:var(--muted); cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--accent); color:#fff}
+  .checks{display:flex; flex-direction:column; gap:10px; margin-top:4px}
+  .chk{display:flex; gap:10px; align-items:flex-start; font-size:14px; cursor:pointer; padding:10px 12px; border:1px solid var(--line); border-radius:10px}
+  .chk input{margin-top:2px; width:18px; height:18px; accent-color:var(--accent); flex:none}
+  .chk.danger{border-color:var(--stop-line); background:#FEF7F6}
+
+  .rec{border-radius:14px; padding:16px 18px; margin-bottom:16px; border:1px solid}
+  .rec .tag{font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; display:block; margin-bottom:5px}
+  .rec h3{margin:0 0 6px; font-size:18px}
+  .rec p{margin:6px 0 0; font-size:14px}
+  .rec.go{background:var(--good-bg); border-color:#BfE3CE; color:var(--ink)}
+  .rec.go .tag{color:var(--good-ink)}
+  .rec.refer{background:var(--stop-bg); border-color:var(--stop-line); color:var(--ink)}
+  .rec.refer .tag{color:var(--stop-ink)}
+  .target{font-size:22px; font-weight:800; color:var(--accent-deep); margin:8px 0 0}
+  .refer .target{color:var(--stop-ink)}
+
+  .methods{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .m{border:1px solid var(--line); border-radius:12px; padding:14px; background:#fff; position:relative}
+  .m.best{border-color:var(--accent); box-shadow:0 0 0 2px rgba(14,138,143,.18)}
+  .m .best-badge{position:absolute; top:-9px; right:12px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; letter-spacing:.06em; padding:2px 8px; border-radius:20px; text-transform:uppercase}
+  .m .dim{opacity:.55}
+  .m h4{margin:0 0 4px; font-size:15px}
+  .m .meta{font-size:11px; color:var(--muted); margin:0 0 10px}
+  .row{display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:0}
+  .row b{color:var(--ink)}
+  .bpm{font-variant-numeric:tabular-nums; font-weight:700; color:var(--accent-deep)}
+  .muted{color:var(--muted)}
+
+  .copy{margin-top:12px; font:inherit; font-weight:600; font-size:13px; padding:9px 14px; border:1px solid var(--accent); color:var(--accent-deep); background:#fff; border-radius:9px; cursor:pointer}
+  .copy:active{background:var(--soft)}
+  .docbox{background:var(--soft); border:1px dashed var(--accent); border-radius:12px; padding:13px; margin-top:14px; font-size:13.5px}
+  .docbox .tag{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; display:block; margin-bottom:4px}
+
+  .warn{border-radius:12px; padding:13px 16px; font-size:13px; margin-bottom:14px}
+  .warn.amber{background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn-ink)}
+  .warn.stop{background:var(--stop-bg); border:1px solid var(--stop-line); color:var(--stop-ink)}
+  .warn b{font-weight:700}
+  .warn ul{margin:6px 0 0; padding-left:18px}
+  .warn li{margin:2px 0}
+
+  .kmi-out{display:flex; align-items:baseline; gap:10px; margin-top:6px}
+  .kmi-val{font-size:34px; font-weight:800; color:var(--accent-deep); line-height:1}
+  .kmi-cat{font-weight:700}
+  .foot{font-size:11.5px; color:var(--muted); text-align:center; margin-top:6px}
+  @media(max-width:460px){ .grid,.methods{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Gyvensenos medicina · klinikinis įrankis</div>
+  <h1>Fizinio krūvio intensyvumas ir KMI</h1>
+  <p class="sub">Skirta pacientams su lėtinėmis ligomis: pagal situaciją rekomenduoja saugiausią krūvio vertinimo metodą.</p>
+
+  <!-- INPUTS -->
+  <div class="card">
+    <h2>Paciento duomenys</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="age">Amžius (metai)</label>
+        <input id="age" type="number" min="1" max="110" inputmode="numeric" placeholder="pvz., 62">
+      </div>
+      <div class="field">
+        <label for="rest">Ramybės pulsas <span class="hint">nebūtina</span></label>
+        <input id="rest" type="number" min="30" max="130" inputmode="numeric" placeholder="d./min">
+      </div>
+      <div class="field full">
+        <label>Lytis</label>
+        <div class="seg" id="sex">
+          <button type="button" data-v="moteris" aria-pressed="true">Moteris</button>
+          <button type="button" data-v="vyras" aria-pressed="false">Vyras</button>
+        </div>
+      </div>
+    </div>
+    <div class="checks">
+      <label class="chk"><input type="checkbox" id="meds"><span>Vartoja <b>pulsą veikiančius vaistus</b> (beta blokatorius, kai kuriuos kalcio antagonistus)</span></label>
+      <label class="chk"><input type="checkbox" id="cardiac"><span><b>Širdies liga, aritmija</b> ar kardiostimuliatorius (pulsas gali neatspindėti krūvio)</span></label>
+      <label class="chk danger"><input type="checkbox" id="unstable"><span><b>Nestabili būklė ar simptomai</b>: krūtinės skausmas, dusulys ramybėje, sinkopė, neseni ūmūs įvykiai</span></label>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <div id="recBox" class="rec go" style="display:none">
+    <span class="tag" id="recTag">Rekomenduojamas metodas</span>
+    <h3 id="recTitle"></h3>
+    <div class="target" id="recTarget"></div>
+    <p id="recBody"></p>
+  </div>
+
+  <!-- STOP SIGNS (always) -->
+  <div class="warn stop">
+    <b>Nutraukti krūvį ir kreiptis pagalbos, jei:</b> krūtinės skausmas/spaudimas, neįprastas dusulys, svaigulys ar alpimas, stiprūs širdies permušimai, šaltas prakaitas, pykinimas.
+  </div>
+
+  <!-- METHODS -->
+  <div class="card">
+    <h2>Visi metodai</h2>
+    <div class="methods">
+      <div class="m" id="mRPE">
+        <h4>RPE – subjektyvus krūvis</h4>
+        <p class="meta">Patikima net vartojant pulsą veikiančius vaistus</p>
+        <div class="row"><span>Lengvas</span><b>Borg 9–11 · CR10 1–2</b></div>
+        <div class="row"><span>Vidutinis</span><b>Borg 12–14 · CR10 3–4</b></div>
+        <div class="row"><span>Intensyvus</span><b>Borg 15–17 · CR10 5–6</b></div>
+      </div>
+
+      <div class="m" id="mTalk">
+        <h4>„Talk test“</h4>
+        <p class="meta">Paprasčiausias, saugus kiekvienam</p>
+        <div class="row"><span>Vidutinis</span><b>gali kalbėti, ne dainuoti</b></div>
+        <div class="row"><span>Intensyvus</span><b>tik keli žodžiai be pauzės</b></div>
+      </div>
+
+      <div class="m" id="mHRmax">
+        <h4>Pulso zonos (% maks.)</h4>
+        <p class="meta" id="hrmaxMeta">Maks. pulsas pagal amžių</p>
+        <div class="row"><span>Vidutinis (50–70 %)</span><b class="bpm" id="hrmaxMod">—</b></div>
+        <div class="row"><span>Intensyvus (70–85 %)</span><b class="bpm" id="hrmaxVig">—</b></div>
+        <div class="row"><span>Maks. pulsas</span><b class="bpm" id="hrmaxVal">—</b></div>
+      </div>
+
+      <div class="m" id="mKarv">
+        <h4>Karvonen (pulso rezervas)</h4>
+        <p class="meta">Individualesnis · reikia ramybės pulso</p>
+        <div id="karvVals">
+          <div class="row"><span>Lengvas (30–39 %)</span><b class="bpm" id="kvLight">—</b></div>
+          <div class="row"><span>Vidutinis (40–59 %)</span><b class="bpm" id="kvMod">—</b></div>
+          <div class="row"><span>Intensyvus (60–84 %)</span><b class="bpm" id="kvVig">—</b></div>
+        </div>
+        <p class="muted" id="karvNote" style="font-size:12.5px; margin:8px 0 0">Įveskite ramybės pulsą zonoms apskaičiuoti.</p>
+      </div>
+    </div>
+
+    <div class="docbox">
+      <span class="tag">Įrašui / pacientui</span>
+      <span id="docLine">Suveskite amžių, kad pamatytumėte rekomendaciją.</span>
+      <div><button class="copy" id="copyBtn">Kopijuoti</button></div>
+    </div>
+  </div>
+
+  <div class="warn amber">
+    <b>Bendros taisyklės jautriai grupei:</b>
+    <ul>
+      <li>Pradėti nuo mažo krūvio, didinti palaipsniui („start low, go slow“).</li>
+      <li>Pulso formulės – populiacijos vidurkiai (±10–12 d./min); vaistai ir būklė juos keičia.</li>
+      <li>Esant širdies/plaučių ligai tikslias zonas saugiausia gauti iš kontroliuojamo krūvio testo.</li>
+      <li>RPE ir „talk test“ tinka visiems – naudokite kaip pagrindą ar kontrolę.</li>
+    </ul>
+  </div>
+
+  <!-- KMI -->
+  <div class="card">
+    <h2>KMI (kūno masės indeksas)</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="h">Ūgis (cm)</label>
+        <input id="h" type="number" min="100" max="220" inputmode="numeric" placeholder="pvz., 168">
+      </div>
+      <div class="field">
+        <label for="w">Svoris (kg)</label>
+        <input id="w" type="number" min="25" max="250" inputmode="decimal" placeholder="pvz., 72">
+      </div>
+    </div>
+    <div class="kmi-out">
+      <span class="kmi-val" id="kmiVal">—</span>
+      <span class="kmi-cat" id="kmiCat" style="color:var(--muted)">suveskite ūgį ir svorį</span>
+    </div>
+    <p class="muted" style="font-size:12.5px; margin:10px 0 0">
+      PSO: &lt;18,5 per mažas · 18,5–24,9 normalus · 25–29,9 antsvoris · ≥30 nutukimas.
+      Jautriai grupei KMI gali klaidinti esant <b>edemai/skysčių susilaikymui</b> (širdies/inkstų nepakankamumas) ar <b>sarkopenijai</b> – vertinti kartu su juosmens apimtimi ir klinika.
+    </p>
+  </div>
+
+  <p class="foot">Atskaita: maks. pulsas – Tanaka/Gulati; zonos – AHA (% maks.) ir ACSM (pulso rezervas); RPE – Borg. Įrankis nepakeičia klinikinio vertinimo.</p>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let sex = "moteris";
+  $("sex").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    [...$("sex").children].forEach(x=>x.setAttribute("aria-pressed", x===b));
+    sex = b.dataset.v; calc();
+  });
+  ["age","rest","meds","cardiac","unstable","h","w"].forEach(id=> $(id).addEventListener("input", calc));
+
+  function round(n){ return Math.round(n); }
+  function band(lo,hi){ return round(lo) + "–" + round(hi) + " d./min"; }
+
+  function highlight(best){
+    ["mRPE","mTalk","mHRmax","mKarv"].forEach(id=>{
+      const el=$(id); el.classList.remove("best");
+      const old=el.querySelector(".best-badge"); if(old) old.remove();
+    });
+    if(best){
+      const el=$(best); el.classList.add("best");
+      const b=document.createElement("div"); b.className="best-badge"; b.textContent="Rekomenduojama";
+      el.appendChild(b);
+    }
+  }
+
+  function calc(){
+    const age = parseFloat($("age").value);
+    const rest = parseFloat($("rest").value);
+    const meds = $("meds").checked, cardiac = $("cardiac").checked, unstable = $("unstable").checked;
+
+    // KMI (nepriklausomai)
+    kmiCalc();
+
+    if(!age || age<1){
+      $("recBox").style.display="none";
+      $("hrmaxMod").textContent=$("hrmaxVig").textContent=$("hrmaxVal").textContent="—";
+      $("hrmaxMeta").textContent="Maks. pulsas pagal amžių";
+      $("docLine").textContent="Suveskite amžių, kad pamatytumėte rekomendaciją.";
+      karvShow(false); highlight(null);
+      return;
+    }
+
+    // Maks. pulsas: moterims Gulati, vyrams Tanaka
+    let hrmax, fname;
+    if(sex==="moteris"){ hrmax = 206 - 0.88*age; fname="Gulati (206 − 0,88 × amžius)"; }
+    else { hrmax = 208 - 0.7*age; fname="Tanaka (208 − 0,7 × amžius)"; }
+    hrmax = round(hrmax);
+    $("hrmaxVal").textContent = hrmax;
+    $("hrmaxMeta").textContent = fname;
+    $("hrmaxMod").textContent = band(0.5*hrmax, 0.7*hrmax);
+    $("hrmaxVig").textContent = band(0.7*hrmax, 0.85*hrmax);
+
+    // Karvonen
+    let kvModTxt = null;
+    if(rest && rest>=30 && rest<hrmax){
+      const hrr = hrmax - rest;
+      $("kvLight").textContent = band(rest+hrr*0.30, rest+hrr*0.39);
+      $("kvMod").textContent   = band(rest+hrr*0.40, rest+hrr*0.59);
+      $("kvVig").textContent   = band(rest+hrr*0.60, rest+hrr*0.84);
+      kvModTxt = band(rest+hrr*0.40, rest+hrr*0.59);
+      karvShow(true);
+    } else { karvShow(false); }
+
+    const hrReliable = !meds && !cardiac;
+
+    // Rekomendacijos logika
+    let rec;
+    if(unstable) rec="refer";
+    else if(!hrReliable) rec="rpe";
+    else if(rest && rest>=30 && rest<hrmax) rec="karvonen";
+    else rec="hrmax";
+
+    const box=$("recBox"); box.style.display="block";
+    box.className = "rec " + (rec==="refer" ? "refer" : "go");
+
+    if(rec==="refer"){
+      highlight(null);
+      $("recTag").textContent="Pirmas žingsnis";
+      $("recTitle").textContent="Prieš skiriant krūvį – siųsti vertinimui";
+      $("recTarget").textContent="";
+      $("recBody").textContent="Esant nestabiliai būklei ar simptomams, intensyvumo neskaičiuoti savarankiškai – nukreipti gydytojo/kardiologo vertinimui ar kontroliuojamam krūvio testui. Iki tol – tik labai lengvas aktyvumas pagal savijautą.";
+      $("docLine").textContent="Krūvio intensyvumas neskirtas: nestabili būklė/simptomai → nukreipta gydytojo vertinimui prieš skiriant krūvį.";
+      return;
+    }
+
+    if(rec==="rpe"){
+      highlight("mRPE");
+      $("recTag").textContent="Rekomenduojamas metodas";
+      $("recTitle").textContent="RPE + „talk test“";
+      $("recTarget").textContent="Vidutinis krūvis: Borg 12–14 (CR10 3–4)";
+      $("recBody").textContent="Pulsas dėl vaistų ar būklės nepatikimas, todėl pulso zonų kaip pagrindo netaikyti. Orientuotis į pojūtį: „talk test“ – gali kalbėti, bet ne dainuoti. Pradėti nuo apatinės ribos.";
+      $("docLine").textContent="Krūvio intensyvumas pagal RPE (pulsas nepatikimas dėl vaistų/būklės): vidutinis = Borg 12–14 / CR10 3–4; „talk test“ – kalba įmanoma, dainavimas ne. Pradėti palaipsniui.";
+    }
+    else if(rec==="karvonen"){
+      highlight("mKarv");
+      $("recTag").textContent="Rekomenduojamas metodas";
+      $("recTitle").textContent="Karvonen (pulso rezervas) + RPE kontrolė";
+      $("recTarget").textContent="Vidutinis krūvis: " + kvModTxt;
+      $("recBody").textContent="Pulsas patikimas, žinomas ramybės pulsas – tinka individualesnės Karvoneno zonos. Pradėti nuo apatinės ribos, kartu sekti RPE 12–14.";
+      $("docLine").textContent="Krūvio intensyvumas pagal Karvonen (40–59% HRR): vidutinis = " + kvModTxt + "; kontrolė RPE 12–14. Pradėti nuo apatinės ribos.";
+    }
+    else {
+      highlight("mHRmax");
+      $("recTag").textContent="Rekomenduojamas metodas";
+      $("recTitle").textContent="Pulso zonos (% maks.) + RPE kontrolė";
+      $("recTarget").textContent="Vidutinis krūvis: " + band(0.5*hrmax,0.7*hrmax);
+      $("recBody").textContent="Pulsas patikimas. Vidutinis krūvis – 50–70 % maks. pulso, kartu sekti RPE 12–14. Įvedus ramybės pulsą, gausite tikslesnes Karvoneno zonas.";
+      $("docLine").textContent="Krūvio intensyvumas pagal % maks. pulso (" + fname + ", maks. " + hrmax + "): vidutinis = " + band(0.5*hrmax,0.7*hrmax) + "; kontrolė RPE 12–14.";
+    }
+  }
+
+  function karvShow(on){
+    $("karvVals").style.display = on ? "" : "none";
+    $("karvNote").style.display = on ? "none" : "";
+  }
+
+  function kmiCalc(){
+    const h = parseFloat($("h").value), w = parseFloat($("w").value);
+    if(!h || !w || h<100 || w<25){ $("kmiVal").textContent="—"; $("kmiCat").textContent="suveskite ūgį ir svorį"; $("kmiCat").style.color="var(--muted)"; return; }
+    const bmi = w/Math.pow(h/100,2);
+    $("kmiVal").textContent = bmi.toFixed(1).replace(".",",");
+    let cat, col;
+    if(bmi<18.5){ cat="per mažas svoris"; col="#8A5A12"; }
+    else if(bmi<25){ cat="normalus svoris"; col="#1F6B45"; }
+    else if(bmi<30){ cat="antsvoris"; col="#8A5A12"; }
+    else if(bmi<35){ cat="I° nutukimas"; col="#A4332B"; }
+    else if(bmi<40){ cat="II° nutukimas"; col="#A4332B"; }
+    else { cat="III° nutukimas"; col="#A4332B"; }
+    $("kmiCat").textContent = cat; $("kmiCat").style.color = col;
+  }
+
+  $("copyBtn").addEventListener("click", ()=>{
+    navigator.clipboard?.writeText($("docLine").textContent).then(()=>{
+      $("copyBtn").textContent="Nukopijuota ✓";
+      setTimeout(()=>$("copyBtn").textContent="Kopijuoti",1500);
+    });
+  });
+
+  calc();
+</script>
+</body>
+</html>
